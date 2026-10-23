@@ -29,8 +29,9 @@ class DynamicsHttp {
           'status': true,
           'data': DynamicsDataModel.fromJson(res.data['data']),
         };
-      } catch (err) {
+      } catch (err, stack) {
         print(err);
+        print(stack);
         return {
           'status': false,
           'data': [],

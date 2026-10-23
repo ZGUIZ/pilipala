@@ -1,3 +1,11 @@
+// 安全转换为 int?，防止 API 返回 String 类型导致类型错误
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is String) return int.tryParse(v);
+  return null;
+}
+
 class FollowUpModel {
   FollowUpModel({
     this.liveUsers,
@@ -39,7 +47,7 @@ class LiveUsers {
   List<LiveUserItem>? items;
 
   LiveUsers.fromJson(Map<String, dynamic> json) {
-    count = json['count'];
+    count = _toInt(json['count']);
     group = json['group'];
     items = json['items']
         .map<LiveUserItem>((e) => LiveUserItem.fromJson(e))
@@ -72,8 +80,8 @@ class LiveUserItem {
     face = json['face'];
     isReserveRecall = json['is_reserve_recall'];
     jumpUrl = json['jump_url'];
-    mid = json['mid'];
-    roomId = json['room_id'];
+    mid = _toInt(json['mid']);
+    roomId = _toInt(json['room_id']);
     title = json['title'];
     uname = json['uname'];
   }
@@ -99,7 +107,7 @@ class UpItem {
     face = json['face'];
     hasUpdate = json['has_update'];
     isReserveRecall = json['is_reserve_recall'];
-    mid = json['mid'];
+    mid = _toInt(json['mid']);
     uname = json['uname'];
   }
 }
@@ -117,7 +125,7 @@ class MyInfo {
 
   MyInfo.fromJson(Map<String, dynamic> json) {
     face = json['face'];
-    mid = json['mid'];
+    mid = _toInt(json['mid']);
     name = json['name'];
   }
 }

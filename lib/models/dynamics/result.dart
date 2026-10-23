@@ -1,5 +1,25 @@
 import 'dart:convert';
 
+// 安全转换为 int?，防止 API 返回 String 类型导致类型错误
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is double) return v.toInt();
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v.trim());
+  return null;
+}
+
+// 安全转换为 double?，同上
+double? _toDouble(dynamic v) {
+  if (v == null) return null;
+  if (v is double) return v;
+  if (v is int) return v.toDouble();
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v.trim());
+  return null;
+}
+
 class DynamicsDataModel {
   DynamicsDataModel({
     this.hasMore,
@@ -140,11 +160,11 @@ class ModuleAuthorModel {
     following = json['following'];
     jumpUrl = json['jump_url'];
     label = json['label'];
-    mid = json['mid'];
+    mid = _toInt(json['mid']);
     name = json['name'];
     pubAction = json['pub_action'];
     pubTime = json['pub_time'];
-    pubTs = json['pub_ts'] == 0 ? null : json['pub_ts'];
+    pubTs = json['pub_ts'] == 0 ? null : _toInt(json['pub_ts']);
     type = json['type'];
     vip = json['vip'];
   }
@@ -244,17 +264,15 @@ class Vote {
   int? voteId;
 
   Vote.fromJson(Map<String, dynamic> json) {
-    choiceCnt = json['choice_cnt'];
+    choiceCnt = _toInt(json['choice_cnt']);
     share = json['share'];
-    defaultShare = json['default_share'];
-    endTime = json['end_time'] is int
-        ? json['end_time']
-        : int.parse(json['end_time']);
-    joinNum = json['join_num'];
-    status = json['status'];
-    type = json['type'];
-    uid = json['uid'];
-    voteId = json['vote_id'];
+    defaultShare = _toInt(json['default_share']);
+    endTime = _toInt(json['end_time']);
+    joinNum = _toInt(json['join_num']);
+    status = _toInt(json['status']);
+    type = _toInt(json['type']);
+    uid = _toInt(json['uid']);
+    voteId = _toInt(json['vote_id']);
   }
 }
 
@@ -321,13 +339,12 @@ class Reserve {
     desc1 = json['desc1'];
     desc2 = json['desc2'];
     jumpUrl = json['jump_url'];
-    reserveTotal = json['reserve_total'];
-    rid = json['rid'];
-    state = json['state'];
-    state = json['state'];
-    stype = json['stype'];
+    reserveTotal = _toInt(json['reserve_total']);
+    rid = _toInt(json['rid']);
+    state = _toInt(json['state']);
+    stype = _toInt(json['stype']);
     title = json['title'];
-    upMid = json['up_mid'];
+    upMid = _toInt(json['up_mid']);
   }
 }
 
@@ -473,7 +490,7 @@ class DynamicTopicModel {
   String? name;
 
   DynamicTopicModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = _toInt(json['id']);
     jumpUrl = json['jump_url'];
     name = json['name'];
   }
@@ -511,18 +528,18 @@ class DynamicArchiveModel {
   int? seasonId;
 
   DynamicArchiveModel.fromJson(Map<String, dynamic> json) {
-    aid = json['aid'] is String ? int.parse(json['aid']) : json['aid'];
+    aid = _toInt(json['aid']);
     badge = json['badge'];
     bvid = json['bvid'] ?? json['epid'].toString() ?? ' ';
     cover = json['cover'];
-    disablePreview = json['disable_preview'];
+    disablePreview = _toInt(json['disable_preview']);
     durationText = json['duration_text'];
     jumpUrl = json['jump_url'];
     stat = json['stat'] != null ? Stat.fromJson(json['stat']) : null;
     title = json['title'];
-    type = json['type'];
-    epid = json['epid'];
-    seasonId = json['season_id'];
+    type = _toInt(json['type']);
+    epid = _toInt(json['epid']);
+    seasonId = _toInt(json['season_id']);
   }
 }
 
@@ -536,7 +553,7 @@ class DynamicDrawModel {
   List<DynamicDrawItemModel>? items;
 
   DynamicDrawModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = _toInt(json['id']);
     // ignore: prefer_null_aware_operators
     items = json['items'] != null
         ? json['items']
@@ -625,9 +642,9 @@ class Emoji {
   int? type;
   Emoji.fromJson(Map<String, dynamic> json) {
     iconUrl = json['icon_url'];
-    size = json['size'].toDouble();
+    size = _toDouble(json['size']);
     text = json['text'];
-    type = json['type'];
+    type = _toInt(json['type']);
   }
 }
 
@@ -657,9 +674,9 @@ class OpusPicsModel {
   String? url;
 
   OpusPicsModel.fromJson(Map<String, dynamic> json) {
-    width = json['width'];
-    height = json['height'];
-    size = json['size'] != null ? json['size'].toInt() : 0;
+    width = _toInt(json['width']);
+    height = _toInt(json['height']);
+    size = _toInt(json['size']) ?? 0;
     src = json['src'];
     url = json['url'];
   }
@@ -679,11 +696,11 @@ class DynamicDrawItemModel {
   List? tags;
   int? width;
   DynamicDrawItemModel.fromJson(Map<String, dynamic> json) {
-    height = json['height'];
-    size = json['size'].toInt();
+    height = _toInt(json['height']);
+    size = _toInt(json['size']) ?? 0;
     src = json['src'];
     tags = json['tags'];
-    width = json['width'];
+    width = _toInt(json['width']);
   }
 }
 
@@ -712,18 +729,18 @@ class DynamicLiveModel {
     if (json['content'] != null) {
       Map<String, dynamic> data = jsonDecode(json['content']);
 
-      type = data['type'];
+      type = _toInt(data['type']);
       Map livePlayInfo = data['live_play_info'];
-      uid = livePlayInfo['uid'];
+      uid = _toInt(livePlayInfo['uid']);
       parentAreaName = livePlayInfo['parent_area_name'];
-      roomId = livePlayInfo['room_id'];
+      roomId = _toInt(livePlayInfo['room_id']);
       liveId = livePlayInfo['live_id'];
-      liveStatus = livePlayInfo['live_status'];
+      liveStatus = _toInt(livePlayInfo['live_status']);
       cover = livePlayInfo['cover'];
-      online = livePlayInfo['online'];
+      online = _toInt(livePlayInfo['online']);
       areaName = livePlayInfo['area_name'];
       title = livePlayInfo['title'];
-      liveStartTime = livePlayInfo['live_start_time'];
+      liveStartTime = _toInt(livePlayInfo['live_start_time']);
       watchedShow = livePlayInfo['watched_show'];
     }
   }
@@ -757,10 +774,10 @@ class DynamicLive2Model {
     cover = json['cover'];
     descFirst = json['desc_first'];
     descSecond = json['desc_second'];
-    id = json['id'];
+    id = _toInt(json['id']);
     jumpUrl = json['jump_url'];
-    liveState = json['liv_state'];
-    reserveType = json['reserve_type'];
+    liveState = _toInt(json['liv_state']);
+    reserveType = _toInt(json['reserve_type']);
     title = json['title'];
   }
 }
