@@ -131,7 +131,9 @@ dependencies:
   # html渲染
   flutter_html: ^3.0.0-beta.2
   # 极验
-  gt3_flutter_plugin: ^0.1.0
+  # 0.1.1 修复了极验 SDK 未设置请求协议导致验证码接口 url 拼成 "nullapi.geetest.com"
+  # 而在原生层抛异常闪退的问题
+  gt3_flutter_plugin: ^0.1.1
   uuid: ^4.5.3
   scrollable_positioned_list: ^0.3.8
   catcher_2: ^1.2.6

@@ -98,14 +98,18 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
 
   void controllerInit() {
     _homeController = Get.put(HomeController());
+    // 注意: 下面的控制器字段声明为可空类型, 若不显式指定泛型参数, Dart 会把
+    // 赋值上下文类型传播给 Get.put<S>, 导致 S 被推断成 `RankController?` 之类,
+    // GetX 便会以 "RankController?" 作为 key 注册, 而 Get.find<RankController>()
+    // 查找的是 "RankController", 结果就是找不到实例。
     if (_mainController.pagesIds.contains(1)) {
-      _rankController = Get.put(RankController());
+      _rankController = Get.put<RankController>(RankController());
     }
     if (_mainController.pagesIds.contains(2)) {
-      _dynamicController = Get.put(DynamicsController());
+      _dynamicController = Get.put<DynamicsController>(DynamicsController());
     }
     if (_mainController.pagesIds.contains(3)) {
-      _mediaController = Get.put(MediaController());
+      _mediaController = Get.put<MediaController>(MediaController());
     }
   }
 

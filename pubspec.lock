@@ -682,10 +682,10 @@ packages:
     dependency: "direct main"
     description:
       name: gt3_flutter_plugin
-      sha256: "08f35692e937770ad6b3e2017eb8ef81839a82b8a63f5acf3abab14b688fc36c"
+      sha256: "9cf4070f3f1811b7aa7a1daebdec5886dbda8e64f932a713dab21d8128d7dad2"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.1.0"
+    version: "0.1.1"
   hive:
     dependency: "direct main"
     description:
