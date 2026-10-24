@@ -43,6 +43,10 @@ void main() async {
     [FileHandler(await getLogsPath())],
   );
 
+  /// 全局缓存必须在 runApp 之前初始化
+  /// 否则首帧构建界面时读取 GlobalDataCache 的 late 字段会抛 LateInitializationError
+  await GlobalDataCache().initialize();
+
   Catcher2(
     releaseConfig: releaseConfig,
     runAppFunction: () {
@@ -64,7 +68,6 @@ void main() async {
   }
 
   PiliSchame.init();
-  await GlobalDataCache().initialize();
 }
 
 class MyApp extends StatelessWidget {

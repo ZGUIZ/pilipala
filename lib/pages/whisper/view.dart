@@ -215,9 +215,10 @@ class SessionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String heroTag = Utils.makeHeroTag(sessionItem.accountInfo?.mid ?? 0);
-    final content = sessionItem.lastMsg.content;
-    final msgStatus = sessionItem.lastMsg.msgStatus;
-    final int msgType = sessionItem.lastMsg.msgType;
+    final lastMsg = sessionItem.lastMsg;
+    final content = lastMsg?.content;
+    final msgStatus = lastMsg?.msgStatus;
+    final int msgType = lastMsg?.msgType ?? 0;
 
     return ListTile(
       onTap: () {
@@ -227,8 +228,8 @@ class SessionItem extends StatelessWidget {
           '/whisperDetail',
           parameters: {
             'talkerId': sessionItem.talkerId.toString(),
-            'name': sessionItem.accountInfo.name,
-            'face': sessionItem.accountInfo.face,
+            'name': sessionItem.accountInfo?.name ?? '',
+            'face': sessionItem.accountInfo?.face ?? '',
             'mid': (sessionItem.accountInfo?.mid ?? 0).toString(),
             'heroTag': heroTag,
           },
@@ -244,11 +245,11 @@ class SessionItem extends StatelessWidget {
             width: 45,
             height: 45,
             type: 'avatar',
-            src: sessionItem.accountInfo.face,
+            src: sessionItem.accountInfo?.face,
           ),
         ),
       ),
-      title: Text(sessionItem.accountInfo.name),
+      title: Text(sessionItem.accountInfo?.name ?? ''),
       subtitle: Text(
           msgStatus == 1
               ? '你撤回了一条消息'
@@ -268,7 +269,7 @@ class SessionItem extends StatelessWidget {
               .labelMedium!
               .copyWith(color: Theme.of(context).colorScheme.outline)),
       trailing: Text(
-        Utils.dateFormat(sessionItem.lastMsg.timestamp),
+        Utils.dateFormat(lastMsg?.timestamp),
         style: TextStyle(
           fontSize: Theme.of(context).textTheme.labelSmall!.fontSize,
           color: Theme.of(context).colorScheme.outline,

@@ -97,6 +97,8 @@ class SettingBoxKey {
       enableQuickDouble = 'enableQuickDouble',
       enableShowDanmaku = 'enableShowDanmaku',
       enableBackgroundPlay = 'enableBackgroundPlay',
+      // 播放视频时保持屏幕常亮
+      enableKeepScreenOn = 'enableKeepScreenOn',
       fullScreenGestureMode = 'fullScreenGestureMode',
 
       /// 隐私

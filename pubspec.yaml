@@ -155,6 +155,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # 屏幕常亮测试 需要替换 wakelock_plus 的平台实现
+  wakelock_plus_platform_interface: ^1.1.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -174,6 +176,11 @@ dependency_overrides:
   # 以下包的新版本移除了 Flutter 已废弃的 v1 embedding API（PluginRegistry.Registrar）
   flutter_mailer: ^3.0.3
   fluttertoast: 9.1.0
+  # wakelock_plus 1.1.6 的原生代码使用旧版 pigeon channel 名
+  # (dev.flutter.pigeon.WakelockPlusApi.*)，而 platform_interface 1.2.0 改成了
+  # dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.*
+  # 两边对不上会导致调用静默失败，锁回 1.1.0 保持一致
+  wakelock_plus_platform_interface: 1.1.0
   # 这两个插件无适配新版 Flutter 的发布版本，使用项目内修补过的副本
   status_bar_control:
     path: third_party/status_bar_control

@@ -66,6 +66,8 @@ class WhisperController extends GetxController {
                 'https://message.biliimg.com/bfs/im/489a63efadfb202366c2f88853d2217b5ddc7a13.png',
           );
         }
+        // 账号信息拉取失败或缺失时兜底 避免界面上取空值报错
+        i.accountInfo ??= AccountListModel(name: '', face: '');
       }
     }
     if (res['status'] && res['data'].sessionList != null) {

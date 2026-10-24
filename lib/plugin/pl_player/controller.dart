@@ -23,9 +23,9 @@ import 'package:pilipala/utils/storage.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:status_bar_control/status_bar_control.dart';
 import 'package:universal_platform/universal_platform.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../models/video/subTitile/content.dart';
 import '../../models/video/subTitile/result.dart';
-// import 'package:wakelock_plus/wakelock_plus.dart';
 
 Box videoStorage = GStrorage.video;
 Box setting = GStrorage.setting;
@@ -222,6 +222,18 @@ class PlPlayerController {
 
   Rx<int> get playerCount => _playerCount;
 
+  /// 视频是否正在播放
+  bool _isPlaying = false;
+
+  /// 应用是否处于前台 退到后台时不保持屏幕常亮
+  bool _isForeground = true;
+
+  /// 已应用的屏幕常亮状态 用于避免重复调用
+  bool? _wakelockApplied;
+
+  /// 生命周期监听 用于前后台切换时更新屏幕常亮
+  AppLifecycleListener? _lifecycleListener;
+
   ///
   // Rx<String> get videoType => _videoType;
 
@@ -291,13 +303,13 @@ class PlPlayerController {
     enableAutoLongPressSpeed = cache.enableAutoLongPressSpeed;
     _longPressSpeed.value = cache.longPressSpeed;
     speedsList = cache.speedsList;
-    // _playerEventSubs = onPlayerStatusChanged.listen((PlayerStatus status) {
-    //   if (status == PlayerStatus.playing) {
-    //     WakelockPlus.enable();
-    //   } else {
-    //     WakelockPlus.disable();
-    //   }
-    // });
+    // 前后台切换时更新屏幕常亮
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () => _handleForegroundChange(true),
+      onShow: () => _handleForegroundChange(true),
+      onHide: () => _handleForegroundChange(false),
+      onPause: () => _handleForegroundChange(false),
+    );
   }
 
   // 获取实例 传参
@@ -538,6 +550,8 @@ class PlPlayerController {
     subscriptions.addAll(
       [
         videoPlayerController!.stream.playing.listen((event) {
+          // 播放状态变化时同步屏幕常亮
+          updateWakelock();
           if (event) {
             playerStatus.status.value = PlayerStatus.playing;
           } else {
@@ -557,6 +571,8 @@ class PlPlayerController {
         videoPlayerController!.stream.completed.listen((event) {
           if (event) {
             playerStatus.status.value = PlayerStatus.completed;
+            // 播放结束 恢复屏幕常亮
+            updateWakelock();
 
             /// 触发回调事件
             for (var element in _statusListeners) {
@@ -682,6 +698,41 @@ class PlPlayerController {
     _playbackSpeed.value = speed;
   }
 
+  /// 切换屏幕常亮
+  Future<void> _toggleWakelock(bool enable) async {
+    // 先记下状态 避免连续触发时重复调用平台通道
+    _wakelockApplied = enable;
+    try {
+      await WakelockPlus.toggle(enable: enable);
+      print('[wakelock] 屏幕常亮: $enable');
+    } catch (err) {
+      // 调用失败时重置状态 等待下次重试
+      _wakelockApplied = null;
+      print('[wakelock] err: $err');
+    }
+  }
+
+  /// 更新屏幕常亮状态
+  /// 播放中且应用在前台时保持屏幕常亮
+  /// 以播放器的真实状态为准 不依赖事件流 是否派发
+  /// [playing] 可显式指定播放状态
+  void updateWakelock({bool? playing}) {
+    _isPlaying = playing ?? (_videoPlayerController?.state.playing ?? false);
+    final enable = setting.get(SettingBoxKey.enableKeepScreenOn,
+        defaultValue: true);
+    final shouldEnable = enable && _isPlaying && _isForeground;
+    if (_wakelockApplied == shouldEnable) {
+      return;
+    }
+    unawaited(_toggleWakelock(shouldEnable));
+  }
+
+  /// 应用前后台切换
+  void _handleForegroundChange(bool isForeground) {
+    _isForeground = isForeground;
+    updateWakelock();
+  }
+
   /// 播放视频
   /// TODO  _duration.value丢失
   Future<void> play(
@@ -694,6 +745,7 @@ class PlPlayerController {
     }
     await _videoPlayerController?.play();
     playerStatus.status.value = PlayerStatus.playing;
+    updateWakelock();
     await getCurrentVolume();
     await getCurrentBrightness();
 
@@ -711,6 +763,7 @@ class PlPlayerController {
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
     await _videoPlayerController?.pause();
     playerStatus.status.value = PlayerStatus.paused;
+    updateWakelock();
 
     // 主动暂停时让出音频焦点
     if (!isInterrupt) {
@@ -1059,6 +1112,8 @@ class PlPlayerController {
       _playerCount.value -= 1;
       _heartDuration = 0;
       pause();
+      // 恢复屏幕常亮
+      updateWakelock();
       return;
     }
     _playerCount.value = 0;
@@ -1091,6 +1146,12 @@ class PlPlayerController {
         _videoPlayerController = null;
       }
       _instance = null;
+      // 恢复屏幕常亮
+      _isPlaying = false;
+      _wakelockApplied = null;
+      unawaited(_toggleWakelock(false));
+      _lifecycleListener?.dispose();
+      _lifecycleListener = null;
       // 关闭所有视频页面恢复亮度
       resetBrightness();
       videoPlayerServiceHandler.clear();

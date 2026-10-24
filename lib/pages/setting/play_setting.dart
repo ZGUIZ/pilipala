@@ -113,6 +113,16 @@ class _PlaySettingState extends State<PlaySetting> {
             setKey: SettingBoxKey.enableBackgroundPlay,
             defaultVal: false,
           ),
+          SetSwitchItem(
+            title: '屏幕常亮',
+            subTitle: '播放视频时屏幕不自动熄灭',
+            setKey: SettingBoxKey.enableKeepScreenOn,
+            defaultVal: true,
+            callFn: (bool val) {
+              // 立即生效
+              PlPlayerController(videoType: 'none').updateWakelock();
+            },
+          ),
           if (Platform.isAndroid)
             const SetSwitchItem(
               title: '自动PiP播放',
