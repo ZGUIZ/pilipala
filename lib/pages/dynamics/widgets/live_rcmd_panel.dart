@@ -14,8 +14,8 @@ Widget liveRcmdPanel(item, context, {floor = 1}) {
   TextStyle authorStyle =
       TextStyle(color: Theme.of(context).colorScheme.primary);
   DynamicLiveModel liveRcmd = item.modules.moduleDynamic.major.liveRcmd;
-  int liveStatus = liveRcmd.liveStatus!;
-  Map watchedShow = liveRcmd.watchedShow!;
+  int liveStatus = liveRcmd.liveStatus ?? 0;
+  Map watchedShow = liveRcmd.watchedShow ?? {};
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -78,7 +78,7 @@ Widget liveRcmdPanel(item, context, {floor = 1}) {
                 ),
               ),
               PBadge(
-                text: watchedShow['text_large'],
+                text: watchedShow['text_large']?.toString(),
                 top: 6,
                 right: 56,
                 bottom: null,

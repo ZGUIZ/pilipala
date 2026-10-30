@@ -20,6 +20,13 @@ double? _toDouble(dynamic v) {
   return null;
 }
 
+// 安全转换为 String?，防止 API 返回 int 类型导致类型错误
+String? _toStr(dynamic v) {
+  if (v == null) return null;
+  if (v is String) return v;
+  return v.toString();
+}
+
 class DynamicsDataModel {
   DynamicsDataModel({
     this.hasMore,
@@ -730,16 +737,17 @@ class DynamicLiveModel {
       Map<String, dynamic> data = jsonDecode(json['content']);
 
       type = _toInt(data['type']);
-      Map livePlayInfo = data['live_play_info'];
+      Map livePlayInfo = data['live_play_info'] ?? {};
       uid = _toInt(livePlayInfo['uid']);
-      parentAreaName = livePlayInfo['parent_area_name'];
+      parentAreaName = _toStr(livePlayInfo['parent_area_name']);
       roomId = _toInt(livePlayInfo['room_id']);
-      liveId = livePlayInfo['live_id'];
+      // live_id 接口有时返回数字而不是字符串，直接赋值会抛类型错误导致动态页加载失败
+      liveId = _toStr(livePlayInfo['live_id']);
       liveStatus = _toInt(livePlayInfo['live_status']);
-      cover = livePlayInfo['cover'];
+      cover = _toStr(livePlayInfo['cover']);
       online = _toInt(livePlayInfo['online']);
-      areaName = livePlayInfo['area_name'];
-      title = livePlayInfo['title'];
+      areaName = _toStr(livePlayInfo['area_name']);
+      title = _toStr(livePlayInfo['title']);
       liveStartTime = _toInt(livePlayInfo['live_start_time']);
       watchedShow = livePlayInfo['watched_show'];
     }
@@ -771,14 +779,14 @@ class DynamicLive2Model {
 
   DynamicLive2Model.fromJson(Map<String, dynamic> json) {
     badge = json['badge'];
-    cover = json['cover'];
-    descFirst = json['desc_first'];
-    descSecond = json['desc_second'];
+    cover = _toStr(json['cover']);
+    descFirst = _toStr(json['desc_first']);
+    descSecond = _toStr(json['desc_second']);
     id = _toInt(json['id']);
-    jumpUrl = json['jump_url'];
+    jumpUrl = _toStr(json['jump_url']);
     liveState = _toInt(json['liv_state']);
     reserveType = _toInt(json['reserve_type']);
-    title = json['title'];
+    title = _toStr(json['title']);
   }
 }
 

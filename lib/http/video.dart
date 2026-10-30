@@ -536,9 +536,9 @@ class VideoHttp {
   // 获取字幕内容
   static Future<Map<String, dynamic>> getSubtitleContent(url) async {
     var res = await Request().get('https:$url');
-    final String content =
-        await SubTitleUtils.convertToWebVTT(res.data['body']);
-    final List body = res.data['body'];
+    // 部分视频的字幕接口不返回 body，为 null 时直接使用空列表避免类型错误
+    final List body = res.data['body'] ?? [];
+    final String content = await SubTitleUtils.convertToWebVTT(body);
     return {'content': content, 'body': body};
   }
 }
