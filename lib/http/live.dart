@@ -1,4 +1,5 @@
 import 'package:pilipala/models/live/follow.dart';
+import 'package:pilipala/utils/wbi_sign.dart';
 
 import '../models/live/item.dart';
 import '../models/live/room_info.dart';
@@ -9,8 +10,13 @@ import 'init.dart';
 class LiveHttp {
   static Future liveList(
       {int? vmid, int? pn, int? ps, String? orderType}) async {
-    var res = await Request().get(Api.liveList,
-        data: {'page': pn, 'page_size': 30, 'platform': 'web'});
+    // 该接口有风控校验，必须带 WBI 签名(w_rid + wts)，否则返回 -352
+    Map params = await WbiSign().makSign({
+      'page': pn ?? 1,
+      'page_size': 30,
+      'platform': 'web',
+    });
+    var res = await Request().get(Api.liveList, data: params);
     if (res.data['code'] == 0) {
       return {
         'status': true,
