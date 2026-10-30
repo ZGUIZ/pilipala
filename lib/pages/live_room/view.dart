@@ -438,84 +438,85 @@ Widget buildMessageListUI(
   LiveRoomController liveRoomController,
   ScrollController scrollController,
 ) {
-  return Expanded(
-    child: Obx(
-      () => MediaQuery.removePadding(
-        context: context,
-        removeTop: true,
-        removeBottom: true,
-        child: ShaderMask(
-          shaderCallback: (Rect bounds) {
-            return LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.5),
-                Colors.black,
-              ],
-              stops: const [0.01, 0.05, 0.2],
-            ).createShader(bounds);
+  // 注意: 该组件是被放在 Positioned 里的(已用 top/bottom/left/right 完全约束),
+  // 不能再返回 Expanded, 否则会抛
+  // "Incorrect use of ParentDataWidget" 导致整个消息列表构建失败
+  return Obx(
+    () => MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      removeBottom: true,
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withOpacity(0.5),
+              Colors.black,
+            ],
+            stops: const [0.01, 0.05, 0.2],
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstIn,
+        child: GestureDetector(
+          onTap: () {
+            // 键盘失去焦点
+            FocusScope.of(context).requestFocus(FocusNode());
           },
-          blendMode: BlendMode.dstIn,
-          child: GestureDetector(
-            onTap: () {
-              // 键盘失去焦点
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: liveRoomController.messageList.length,
-              itemBuilder: (context, index) {
-                final LiveMessageModel liveMsgItem =
-                    liveRoomController.messageList[index];
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: liveRoomController.isPortrait.value
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.grey.withOpacity(0.1),
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    ),
-                    margin: EdgeInsets.only(
-                      top: index == 0 ? 20.0 : 0.0,
-                      bottom: 6.0,
-                      left: 14.0,
-                      right: 14.0,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 3.0,
-                      horizontal: 10.0,
-                    ),
-                    child: Text.rich(
-                      TextSpan(
-                        style: const TextStyle(color: Colors.white),
-                        children: [
-                          TextSpan(
-                            text: '${liveMsgItem.userName}: ',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                // 处理点击事件
-                                print('Text clicked');
-                              },
+          child: ListView.builder(
+            controller: scrollController,
+            itemCount: liveRoomController.messageList.length,
+            itemBuilder: (context, index) {
+              final LiveMessageModel liveMsgItem =
+                  liveRoomController.messageList[index];
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: liveRoomController.isPortrait.value
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.grey.withOpacity(0.1),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  ),
+                  margin: EdgeInsets.only(
+                    top: index == 0 ? 20.0 : 0.0,
+                    bottom: 6.0,
+                    left: 14.0,
+                    right: 14.0,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 3.0,
+                    horizontal: 10.0,
+                  ),
+                  child: Text.rich(
+                    TextSpan(
+                      style: const TextStyle(color: Colors.white),
+                      children: [
+                        TextSpan(
+                          text: '${liveMsgItem.userName}: ',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.6),
                           ),
-                          TextSpan(
-                            children: [
-                              ...buildMessageTextSpan(context, liveMsgItem)
-                            ],
-                            // text: liveMsgItem.message,
-                          ),
-                        ],
-                      ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              // 处理点击事件
+                              print('Text clicked');
+                            },
+                        ),
+                        TextSpan(
+                          children: [
+                            ...buildMessageTextSpan(context, liveMsgItem)
+                          ],
+                          // text: liveMsgItem.message,
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
