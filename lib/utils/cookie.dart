@@ -7,9 +7,6 @@ class SetCookie {
     var cookies = await WebviewCookieManager().getCookies(HttpString.baseUrl);
     await Request.cookieManager.cookieJar
         .saveFromResponse(Uri.parse(HttpString.baseUrl), cookies);
-    var cookieString =
-        cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
-    Request.dio.options.headers['cookie'] = cookieString;
 
     cookies = await WebviewCookieManager().getCookies(HttpString.apiBaseUrl);
     await Request.cookieManager.cookieJar
@@ -18,5 +15,8 @@ class SetCookie {
     cookies = await WebviewCookieManager().getCookies(HttpString.tUrl);
     await Request.cookieManager.cookieJar
         .saveFromResponse(Uri.parse(HttpString.tUrl), cookies);
+
+    // webview 的 cookie 会覆盖到各域下，可能与已有的登录态不一致
+    await Request.unifySession();
   }
 }

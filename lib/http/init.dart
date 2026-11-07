@@ -16,6 +16,7 @@ import '../utils/utils.dart';
 import 'api.dart';
 import 'constants.dart';
 import 'interceptor.dart';
+import 'session.dart';
 
 class Request {
   static final Request _instance = Request._internal();
@@ -42,8 +43,8 @@ class Request {
     );
     cookieManager = CookieManager(cookieJar);
     dio.interceptors.add(cookieManager);
-    final List<Cookie> cookie = await cookieManager.cookieJar
-        .loadForRequest(Uri.parse(HttpString.baseUrl));
+    // 各域下可能残留多份登录态，先统一，避免 csrf 与服务端认定的会话错配
+    await unifySessionCookies(cookieManager.cookieJar);
     final userInfo = userInfoCache.get('userInfoCache');
     if (userInfo != null && userInfo.mid != null) {
       final List<Cookie> cookie2 = await cookieManager.cookieJar
@@ -68,22 +69,41 @@ class Request {
       log("setCookie, ${e.toString()}");
     }
 
-    final String cookieString = cookie
+    await refreshCookieHeader();
+  }
+
+  /// 刷新全局 cookie 头
+  ///
+  /// dio_cookie_manager 会在每次请求时把 jar 里匹配该域的 cookie 拼到这个头
+  /// 后面，服务端按最后一个同名 cookie 判定会话，所以这里存的登录态必须和
+  /// jar 里的保持一致，否则请求头里会出现两份不同的 SESSDATA 与 bili_jct。
+  static Future<void> refreshCookieHeader() async {
+    final List<Cookie> cookie = await cookieManager.cookieJar
+        .loadForRequest(Uri.parse(HttpString.baseUrl));
+    dio.options.headers['cookie'] = cookie
         .map((Cookie cookie) => '${cookie.name}=${cookie.value}')
         .join('; ');
+  }
 
-    dio.options.headers['cookie'] = cookieString;
+  /// 统一 cookie jar 中各作用域下的登录态
+  ///
+  /// 登录后 jar 里可能同时存在多份登录态，服务端认定的会话与 app 计算 csrf
+  /// 时取到的会话可能不是同一份，导致需要 csrf 的接口全部返回 -111。
+  static Future<void> unifySession() async {
+    await unifySessionCookies(cookieManager.cookieJar);
+    await refreshCookieHeader();
   }
 
   // 从cookie中获取 csrf token
-  static Future<String> getCsrf() async {
-    List<Cookie> cookies = await cookieManager.cookieJar
-        .loadForRequest(Uri.parse(HttpString.apiBaseUrl));
-    String token = '';
-    if (cookies.where((e) => e.name == 'bili_jct').isNotEmpty) {
-      token = cookies.firstWhere((e) => e.name == 'bili_jct').value;
-    }
-    return token;
+  //
+  // 服务端按 Cookie 头里最后一次出现的 SESSDATA 判定会话，csrf 必须与它
+  // 配套，这里取同一份会话的 bili_jct。
+  static Future<String> getCsrf([String? url]) async {
+    return sessionCsrf(
+      cookieManager.cookieJar,
+      Uri.parse(url ?? HttpString.apiBaseUrl),
+      extraCookieHeader: dio.options.headers['cookie'] as String?,
+    );
   }
 
   static Future<String> getBuvid() async {
